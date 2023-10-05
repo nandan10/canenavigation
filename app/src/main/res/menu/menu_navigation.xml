@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nearby"
+        android:title="NearBy"
+        android:icon="@drawable/explore"/>
+
+
+    <item
+        android:id="@+id/routepreview"
+        android:title="Route Preview"
+        android:icon="@drawable/route"/>
+    <item
+        android:id="@+id/home"
+        android:title="NaviHome"
+        android:icon="@drawable/home"/>
+    <item
+        android:id="@+id/saveroute"
+        android:title="Saved Route"
+        android:icon="@drawable/ic_bookmark"/>
+    <item
+        android:id="@+id/debugbottom"
+        android:title="Debug"
+        android:icon="@drawable/search_icon"/>
+
+
+
+</menu>

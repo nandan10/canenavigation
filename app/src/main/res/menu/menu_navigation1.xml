@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/button"
+        android:title="Add Landmark "
+        android:icon="@drawable/building"/>
+    <item
+        android:id="@+id/home"
+        android:title="Navigation"
+        android:icon="@drawable/home"/>
+
+    <item
+        android:id="@+id/button_save"
+        android:title="Save route"
+        android:icon="@drawable/ic_bookmark"/>
+    <item
+        android:id="@+id/button8"
+        android:title="Stop"
+        android:icon="@drawable/cross"/>
+
+
+</menu>
