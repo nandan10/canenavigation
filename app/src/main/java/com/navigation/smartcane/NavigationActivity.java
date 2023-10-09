@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -116,11 +117,15 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
     double current_lat, current_long, previous_bearing;
     GeoPoint previous_landmark;
     Road road;
+
+
+
     OverpassAPIProvider2 overpassProvider;
     int pathLength;
     GeoPoint endPoint,startPoint;
     OSRMRoadManager roadManager;
     Location mLastLocation;
+    ImageView imageMsg;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     Runnable localInfoRunnable = new Runnable() {
@@ -165,6 +170,9 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
         db = app.myDb;
         button = (Button) findViewById(R.id.button8);
         save_button = (Button) findViewById(R.id.button_save);
+
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
             compass.start();
         }
@@ -205,19 +213,19 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
         compass.start();
     }
 
-   @Override
+    @Override
     protected void onDestroy() {
-       tts.shutdown();
-       mGoogleApiClient.disconnect();
+        tts.shutdown();
+        mGoogleApiClient.disconnect();
         super.onDestroy();
-       compass.stop();
-   }
+        compass.stop();
+    }
 
-       @Override
-       protected void onPause() {
-           super.onPause();
-           compass.stop();
-       }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        compass.stop();
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -231,7 +239,7 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
             buildGoogleApiClient();
         }
     }
-   @Override
+    @Override
     protected void onStop() {
         if(mGoogleApiClient!=null){
 
@@ -241,8 +249,8 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
             }
 
         }
-       compass.stop();
-       super.onStop();
+        compass.stop();
+        super.onStop();
     }
 
     public void onSaveButton(View view) {
@@ -459,7 +467,7 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
             System.out.println(description);
         }
 
-       changeNavigationLayout();
+        changeNavigationLayout();
         navigatingDistance = distanceToStr(road.mLength);
         if(!isPreplanning) {
             tts.speak("Starting Navigation. Your location is " + navigatingDistance + " away.", TextToSpeech.QUEUE_ADD, null);
@@ -1003,67 +1011,67 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
         if(isPreplanning) {setContentView(R.layout.activity_path_review);
         }
         else {setContentView(R.layout.activity_navigation);
-        BottomNavigationView bottomNavigationView=findViewById(R.id.bottom_navigation1);
+            BottomNavigationView bottomNavigationView=findViewById(R.id.bottom_navigation1);
 
-        // Set Home selected
-        bottomNavigationView.setSelectedItemId(R.id.home);
+            // Set Home selected
+            bottomNavigationView.setSelectedItemId(R.id.home);
 
-        // Perform item selected listener
-        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            // Perform item selected listener
+            bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
-                switch(item.getItemId())
-                {
-                    case R.id.button:
-                        // startActivity(new Intent(getApplicationContext(),SearchPOI.class));
-                        overridePendingTransition(0,0);
-                        Intent i = new Intent(getBaseContext(), AddButton.class);
-                        startActivityForResult(i, REQ_CODE_SAVE_LANDMARK);
-                        return true;
-                    case R.id.home:
-                       return true;
-                    case R.id.button_save:
-                        overridePendingTransition(0,0);
-                        if(navType!= MainActivity.NAV_TYPE_LOAD_ROUTE) {
-                            Intent i1 = new Intent(getBaseContext(), SuggestRoute.class);
-                            Address startAdd = getAddress(startPoint.getLatitude(), startPoint.getLongitude());
-                            String startLoc = getNameFromAddress(startAdd, 3);
-                            String endLoc = destinationAddress;
-                            //String startLoc = startAdd.getFeatureName() + ", " + startAdd.getThoroughfare();
-                            //String endLoc = endAdd.getFeatureName()+ ", " + startAdd.getThoroughfare();
-                            i1.putExtra("startLoc", startLoc);
-                            i1.putExtra("endLoc", endLoc);
-                            startActivityForResult(i1, REQ_CODE_SAVE_ROUTE);
-                        }
-                        else{
-                            tts.speak("This route is already saved", TextToSpeech.QUEUE_ADD, null);
-                            Toast.makeText(getApplicationContext(), "This route is already saved", Toast.LENGTH_LONG).show();
-                        }
+                    switch(item.getItemId())
+                    {
+                        case R.id.button:
+                            // startActivity(new Intent(getApplicationContext(),SearchPOI.class));
+                            overridePendingTransition(0,0);
+                            Intent i = new Intent(getBaseContext(), AddButton.class);
+                            startActivityForResult(i, REQ_CODE_SAVE_LANDMARK);
+                            return true;
+                        case R.id.home:
+                            return true;
+                        case R.id.button_save:
+                            overridePendingTransition(0,0);
+                            if(navType!= MainActivity.NAV_TYPE_LOAD_ROUTE) {
+                                Intent i1 = new Intent(getBaseContext(), SuggestRoute.class);
+                                Address startAdd = getAddress(startPoint.getLatitude(), startPoint.getLongitude());
+                                String startLoc = getNameFromAddress(startAdd, 3);
+                                String endLoc = destinationAddress;
+                                //String startLoc = startAdd.getFeatureName() + ", " + startAdd.getThoroughfare();
+                                //String endLoc = endAdd.getFeatureName()+ ", " + startAdd.getThoroughfare();
+                                i1.putExtra("startLoc", startLoc);
+                                i1.putExtra("endLoc", endLoc);
+                                startActivityForResult(i1, REQ_CODE_SAVE_ROUTE);
+                            }
+                            else{
+                                tts.speak("This route is already saved", TextToSpeech.QUEUE_ADD, null);
+                                Toast.makeText(getApplicationContext(), "This route is already saved", Toast.LENGTH_LONG).show();
+                            }
 
-                        return true;
-                    case R.id.button8:
-                        // startActivity(new Intent(getApplicationContext(),ShowRoutes.class));
-                        overridePendingTransition(0,0);
-                        h.removeCallbacks(localInfoRunnable);
-                        landmarks.clear();
-                        tags.clear();
-                        instructions.clear();
-                        tagInstructions.clear();
-                        tagCheck.clear();
-                        landmarkCheck.clear();
-                        tagLandmark.clear();
-                        timestamps.clear();
-                        tst.clear();
-                        faceHeadDirection = false;
-                        exportDb();
-                        finish();
-                        return true;
+                            return true;
+                        case R.id.button8:
+                            // startActivity(new Intent(getApplicationContext(),ShowRoutes.class));
+                            overridePendingTransition(0,0);
+                            h.removeCallbacks(localInfoRunnable);
+                            landmarks.clear();
+                            tags.clear();
+                            instructions.clear();
+                            tagInstructions.clear();
+                            tagCheck.clear();
+                            landmarkCheck.clear();
+                            tagLandmark.clear();
+                            timestamps.clear();
+                            tst.clear();
+                            faceHeadDirection = false;
+                            exportDb();
+                            finish();
+                            return true;
+                    }
+                    return false;
                 }
-                return false;
-            }
-        });
-    }}
+            });
+        }}
 
     public void exportDb() {
         try {
@@ -1450,29 +1458,47 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
         // for (instid=0;instid < instructions.size();instid++) {
         ArrayList listItems = new ArrayList();
 
-            for (i = 0; i < instructions.size(); i++) {
-                instid = i;
-                insto0 = makeInstruction(instid);
-                // Log.e("myTag", insto0);
-
-                ListView listView;
-                // final ArrayList<listItems> arrayList = new ArrayList<listItems>();
-                listItems.add(insto0);
+        for (i = 0; i < instructions.size(); i++) {
+            instid = i;
+            insto0 = makeInstruction(instid);
+            // Log.e("myTag", insto0);
 
 
-                // TextView tv = (TextView)findViewById(R.id.Steps);
-                //tv.append(insto);
+
+            // final ArrayList<listItems> arrayList = new ArrayList<listItems>();
 
 
-                ArrayAdapter<String> adapter;
+
+            // TextView tv = (TextView)findViewById(R.id.Steps);
+            //tv.append(insto);
+
+
+               /* ArrayAdapter<String> adapter;
                 listView = findViewById(R.id.Steps);
                 adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, android.R.id.text1, listItems);
 
-                listView.setAdapter(adapter);
+                listView.setAdapter(adapter);*/
+            // ListView listView;
+            if(insto0.contains("Right") || insto0.contains("right")){
+                listItems.add(new NumbersView(R.drawable.turn_right,insto0));}
+            else if(insto0.contains("Left") || insto0.contains("left")) {
+                listItems.add(new NumbersView(R.drawable.turn_left,insto0));}
+            else if(insto0.contains("destination") && insto0.contains("Reached")) {
+                listItems.add(new NumbersView(R.drawable.route1,insto0));}
+            else {
+                listItems.add(new NumbersView(R.drawable.straight,insto0));}
+
+            NumbersViewAdapter numbersArrayAdapter = new NumbersViewAdapter(this, listItems);
+
+            // create the instance of the ListView to set the numbersViewAdapter
+            ListView numbersListView = findViewById(R.id.Steps);
+
+            // set the numbersViewAdapter for ListView
+            numbersListView.setAdapter(numbersArrayAdapter);
 
 
-            }
-            i++;
+        }
+        i++;
 
-        
+
     }}
