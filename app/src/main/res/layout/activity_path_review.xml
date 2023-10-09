@@ -292,7 +292,8 @@ android:layout_marginStart="118dp"
             android:text="Steps"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/Steps" />
+            android:id="@+id/Steps"
+            android:background="@color/cream"/>
         </androidx.cardview.widget.CardView>
         <androidx.cardview.widget.CardView
             android:id="@+id/cd54"
