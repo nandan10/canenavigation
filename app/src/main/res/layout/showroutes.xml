@@ -11,23 +11,24 @@
     android:paddingBottom="16dp"
     android:textAlignment="textStart"
     >
-    <TextView
-        android:id="@+id/backButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="left"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/ic_back_arrow"
-        android:contentDescription="go back"
-        android:onClick="goBackPressed"
-        android:textColor="#000000" />
-    <!--android:paddingBottom="5sp"-->
-    <!--android:paddingTop="5sp"-->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+        <TextView
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/ic_back_arrow"
+            android:contentDescription="go back"
+            android:onClick="goBackPressed"
+            android:textColor="#000000" />
+        <!--android:paddingBottom="5sp"-->
+        <!--android:paddingTop="5sp"-->
 
         <TextView
             android:id="@+id/myoutput"
