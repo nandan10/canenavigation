@@ -15,6 +15,7 @@ import java.util.ArrayList;
 
 import khushboo.rohit.osmnavi.R;
 
+
 public class NumbersViewAdapter extends ArrayAdapter<NumbersView> {
 
     // invoke the suitable constructor of the ArrayAdapter class

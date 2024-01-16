@@ -1,89 +1,118 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<?xml version="1.0" encoding="utf-8" ?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="10sp">
-    <TextView
-        android:id="@+id/backButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="left"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/ic_back_arrow"
-        android:contentDescription="go back"
-        android:onClick="goBackPressed"
-        android:textColor="#00000000" />
+    android:background="@color/black"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp"
+    android:textAlignment="textStart">
 
-    <TextView
-
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10sp"
-        android:text="EMERGENCY  SETTINGS"
-        android:textAlignment="center"
-        android:contentDescription="emergency settings"
-        android:textSize="20dp"
-        android:textStyle="bold" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/ic_back_arrow"
+            android:contentDescription="go back"
+            android:onClick="goBackPressed"
+            android:textColor="#00000000" />
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="350dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="10dp"
-        android:clickable="true"
-        android:padding="10dp"
-        app:cardBackgroundColor="#30302e"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="10dp"
-        android:layout_gravity="center">
+        <TextView
 
-        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="10sp"
+            android:text="EMERGENCY  SETTINGS"
+            android:textAlignment="center"
+            android:contentDescription="emergency settings"
+            android:textSize="20dp"
+            android:textStyle="bold" />
 
-            >
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="10dp"
+            android:clickable="true"
+            android:padding="10dp"
+            app:cardBackgroundColor="#30302e"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="10dp"
+            android:layout_gravity="center">
 
-
-            <Button
-                android:id="@+id/Button1"
+            <RelativeLayout
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+
+                >
+
+
+                <Button
+                    android:id="@+id/Button1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="55dp"
+                    android:backgroundTint="#30302e"
+                    android:text="Add Emergency Contact "
+                    android:textColor="@color/white"
+                    android:textSize="18dp"
+                    android:contentDescription="Add emergency contact"/>
+            </RelativeLayout>
+
+            <ImageView
+                android:id="@+id/ImageView"
+                android:layout_width="93dp"
                 android:layout_height="match_parent"
-                android:backgroundTint="#30302e"
-                android:text="Add Emergency Contact "
-                android:textColor="@color/white"
-                android:textSize="16dp"
-                android:contentDescription="Add emergency contact"/>
-        </RelativeLayout>
+                android:scaleType="fitStart"
+                android:src="@drawable/img_9" />
 
-        <ImageView
-            android:id="@+id/ImageView"
-            android:layout_width="93dp"
-            android:layout_height="match_parent"
-            android:scaleType="fitStart"
-            android:src="@drawable/img_9" />
-
-    </androidx.cardview.widget.CardView>
+        </androidx.cardview.widget.CardView>
 
 
 
-    <ListView
-        android:id="@+id/ListView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    <Button
-        android:id="@+id/Button2"
+        <ListView
+            android:id="@+id/ListView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <Button
+            android:id="@+id/Button2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="#0F9D58"
+            android:text="Call"
+            android:textColor="@color/white"
+            />
+
+
+    </LinearLayout>
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottomAppBar2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        android:background="#0F9D58"
-        android:text="Call"
-        android:textColor="@color/white"
-        />
+        android:layout_gravity="bottom"
+        android:backgroundTint="@color/black">
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation3"
+            app:itemIconSize="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/black"
+            app:itemIconTint="@drawable/selector"
+            app:itemTextColor="@drawable/selector"
+            app:menu="@menu/menu_navigation2"
+            app:labelVisibilityMode="unlabeled"/>
+    </com.google.android.material.bottomappbar.BottomAppBar>
 
 
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

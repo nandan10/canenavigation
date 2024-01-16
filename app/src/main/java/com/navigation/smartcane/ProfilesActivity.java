@@ -1,4 +1,4 @@
-package com.navigation.smartcane;
+/*package com.navigation.smartcane;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -111,4 +111,4 @@ public class ProfilesActivity extends AppCompatActivity{
         });
     }
 
-}
+}*/

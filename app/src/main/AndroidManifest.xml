@@ -36,6 +36,8 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.WRITE_SMS"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+
 
     <!--This permission is necessary for devices
       with Android O and above, so that
@@ -53,11 +55,21 @@
     <application
         android:name="com.navigation.smartcane.MyApp"
         android:allowBackup="true"
-        android:icon="@drawable/img_33"
+        android:icon="@drawable/logo1"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/img_33"
+        android:roundIcon="@drawable/logo1"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <receiver
+            android:name="com.navigation.smartcane.MyReceiver"
+            android:enabled="true"
+            android:exported="false"></receiver>
+
+        <service
+            android:name="com.navigation.smartcane.MyService"
+            android:enabled="true"
+            android:exported="true" />
+
 
 
         <activity android:name="com.navigation.smartcane.MainActivity" />
@@ -87,25 +99,16 @@
 
 
         <activity android:name="com.navigation.smartcane.NavigationActivity" />
+        <activity android:name="com.navigation.smartcane.Nearby" />
 
 
 
-        <activity
-            android:name="com.navigation.smartcane.DebugActivity"
-           />
+
         <activity
             android:name="com.navigation.smartcane.TrainingActivity"
             />
-        <activity
-            android:name="com.navigation.smartcane.ProfilesActivity"
-            />
 
-        <activity
-            android:name="com.navigation.smartcane.ProfileToCustomizeActivity"
-            />
-        <activity
-            android:name="com.navigation.smartcane.ProfileCustomizeActivity"
-            />
+
         <activity
             android:name="com.navigation.smartcane.EmergencyMainActivity"
              />
@@ -122,7 +125,7 @@
             android:name="com.navigation.smartcane.RegisterActivity"
            />
         <activity
-            android:name="com.navigation.smartcane.ReportIssue"
+            android:name="com.navigation.smartcane.ReportIssues"
              />
         <activity
             android:name="com.navigation.smartcane.IntensityActivity"
@@ -134,10 +137,6 @@
             android:name="com.navigation.smartcane.PermissionActivity"
             />
 
-
-        <activity
-            android:name="com.navigation.smartcane.BatteryActivity"
-            />
 
         <activity
             android:name="com.navigation.smartcane.GetSupport"
@@ -160,10 +159,7 @@
 
 
         <!-- register the service -->
-        <service
-            android:name="com.navigation.smartcane.SensorService"
-            android:enabled="true"
-            android:exported="true" />
+
 
 
 
@@ -196,5 +192,6 @@
     <queries>
         <package android:name="com.whatsapp" />
     </queries>
+
 
 </manifest>

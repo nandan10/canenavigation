@@ -1,4 +1,4 @@
-package com.navigation.smartcane;
+/*package com.navigation.smartcane;
 
 import android.content.Context;
 import android.content.Intent;
@@ -362,3 +362,4 @@ public class ProfileCustomizeActivity extends AppCompatActivity{
         onBackPressed();
     }
 }
+*/

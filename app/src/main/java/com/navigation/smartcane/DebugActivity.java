@@ -1,4 +1,4 @@
-package com.navigation.smartcane;
+/*package com.navigation.smartcane;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -209,5 +209,5 @@ public class DebugActivity extends AppCompatActivity {
     public void goBackPressed(View view) {
         onBackPressed();
     }
-}
+}*/
 

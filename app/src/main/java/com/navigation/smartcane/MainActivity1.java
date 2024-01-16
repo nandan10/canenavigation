@@ -1,21 +1,41 @@
 package com.navigation.smartcane;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+import java.io.IOException;
+import java.util.Locale;
+import java.util.concurrent.*;
+
+import android.annotation.TargetApi;
+import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -26,95 +46,211 @@ import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import khushboo.rohit.osmnavi.R;
-import android.content.DialogInterface;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.navigation.smartcane.NavigationActivity;
+import com.navigation.smartcane.OverpassAPIProvider2;
+
 import android.content.SharedPreferences;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.navigation.smartcane.BLEController;
 
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.List;
+
+import android.widget.ExpandableListView;
+
+import org.osmdroid.bonuspack.location.POI;
+import org.osmdroid.util.BoundingBox;
+import org.osmdroid.util.GeoPoint;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import khushboo.rohit.osmnavi.R;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity1 extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 11;
     public static BluetoothAdapter BA;
+    List<BluetoothGattCharacteristic> bgcNotificationArray = new ArrayList<>();
     private BLEController bleController;
+    OverpassAPIProvider2 overpassProvider;
     private Common common;
-
-    private Button connectButton;
-    private Button disconnectButton;
-    private Button locateButton;
-    private Button trainingButton;
-    private Button navigationButton;
-    private Button profilesButton;
-    private Button debugButton;
-    private Button button;
+    FusedLocationProviderClient mFusedLocationClient;
+    TextToSpeech tts;
+    Handler appHandler = new Handler();
+    int delay = 100, delayCheck = 100 ; //milliseconds
+    double current_lat, current_long, previous_bearing;
     ToggleButton toggleButton;
-    TextView textview1;
+    // TextView textview1;
+    public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469;
 
     private BluetoothLeScanner mBluetoothLeScanner;
-    CardView cd1, cd2, cd3, cd4, cd5, cd6, cd7, cd8, cd9, cd10,cd11;
+    public final static String EXTRA_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
+    CardView cd1, cd2, cd3, cd4, cd5, cd6, cd7, cd8, cd9, cd10, cd11;
+    private Handler handler;
+    private BluetoothDevice device;
+    // private BluetoothGatt bluetoothGatt;
+    private final static String TAG = MainActivity.class.getSimpleName();
+
+    public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
+    public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
+    private final int mConnectionState = STATE_DISCONNECTED;
+    private static final int STATE_DISCONNECTED = 0;
+    private static final int STATE_CONNECTED = 2;
+    //  private TextView mConnectionState;
+    private TextView mDataField;
+    private String mDeviceName;
+    private String mDeviceAddress;
+    private ExpandableListView mGattServicesList;
+    //private BluetoothLeService mBluetoothLeService;
+    private final ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
+            new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
+    private final boolean mConnected = false;
+    private BluetoothGattCharacteristic mNotifyCharacteristic;
+    private boolean shutdown = false;
+    private final String LIST_NAME = "NAME";
+    private final String LIST_UUID = "UUID";
+    private TextView batteryTextView;
+    private TextView magicTextView;
+
+    ArrayList<GeoPoint> poi_tags;
+    ArrayList<String> poi_tagInstructions;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main1);
-        toggleButton = findViewById(R.id.toggleButton);
-        cd1 = (CardView) findViewById(R.id.cd1);
 
-        cd4 = (CardView) findViewById(R.id.cd4);
+        checkPermission();
 
-
-    /*    BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
-        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-        if (bluetoothAdapter == null) {
-            // Device doesn't support Bluetooth
-        }
-
-
-        if (!bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_CONNECT_BT);
-        }*/
+        //  toggleButton = findViewById(R.id.toggleButton);
+        cd1 = findViewById(R.id.cd1);
+        poi_tags = new ArrayList<GeoPoint>();
+        poi_tagInstructions = new ArrayList<String>();
+        cd4 = findViewById(R.id.cd4);
+        batteryTextView = findViewById(R.id.txtBatteryValue);
+        magicTextView = findViewById(R.id.txtMagicValue);
 
 
         this.bleController = BLEController.getInstance(this);
         this.common = Common.getInstance();
-       // getPermissionFromUser();
+        startServiceViaWorker();
 
-        // initButtons();
+       /* IntentFilter intentFilter = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
+        intentFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
 
-     //   checkBLESupport();
-       // checkPermissions();
-     //   if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-         //   this.bleController.init();
-       // } else {
-      //    Log.d("ble init", "onCreate: ble controller not executed due to ACCESS_FINE_LOCATION permission");
-       //}
-        // getPermissionFromUser();
-           /* cd1.setOnClickListener(new View.OnCLickListener () {
+        registerReceiver(bleController.broadCastReceiver,intentFilter);*/
+
+        runOnUiThread(new Runnable() {
+
             @Override
-                public void onClick(View v){
-                    Toast.makeText(getApplicationContext(),"You Clicked Card ", Toast.LENGTH_LONG).show();
+            public void run() {
+                if (mConnectionState == STATE_CONNECTED) {
+//
+                    bleController.setDebugCharNotification();
+
                 }
-            });
-            cd2.setOnClickListener(new View.OnCLickListener () {
-                @Override
-                public void onClick(View v){
-                    Toast.makeText(getApplicationContext(),"You Clicked Card 2", Toast.LENGTH_LONG).show();
-                }
-            });
-            cd3.setOnClickListener(new View.OnCLickListener () {
-                @Override
-                public void onClick(View v){
-                    Toast.makeText(getApplicationContext(),"You Clicked Card 3", Toast.LENGTH_LONG).show();
-                }
-            });
-        }*/
+
+            }
+        });
+        class MyRunnable implements Runnable {
+            @Override
+            public void run() {
+
+                try {
 
 
-        BottomNavigationView bottomNavigationView=findViewById(R.id.bottom_navigation3);
+
+                    runOnUiThread(new Runnable() {
+
+
+                        public void run() {
+                            updateNotifyTexts();
+                            updateNotifyTexts1();
+
+                        }
+
+                    });
+
+
+                } catch (Exception e) {
+                    Log.i("notifyUpdateTask exception", "run: " + e);
+                }
+
+
+            }}ScheduledThreadPoolExecutor exec1 = new ScheduledThreadPoolExecutor(1);
+
+        exec1.scheduleAtFixedRate(new MyRunnable(), 0, 1000, MILLISECONDS);
+
+
+
+      /*  class notifyUpdateTask implements Runnable {
+
+
+            @Override
+            public void run() {
+
+                try {
+
+                    runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
+
+
+
+                            updateNotifyTexts();
+                        }
+
+
+
+
+                    });
+
+                } catch (Exception e) {
+                    Log.i("notifyUpdateTask exception", "run: " + e);
+                }
+
+
+            }
+
+
+        }
+        ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1);
+        exec.scheduleAtFixedRate(new notifyUpdateTask(), 0, 1000, MILLISECONDS);
+
+*/
+
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation3);
 
         // Set Home selected
         bottomNavigationView.setSelectedItemId(R.id.home1);
@@ -124,42 +260,25 @@ public class MainActivity1 extends AppCompatActivity {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
-                switch(item.getItemId())
-                {
+                switch (item.getItemId()) {
                     case R.id.settings3:
                         // startActivity(new Intent(getApplicationContext(),SearchPOI.class));
-                        overridePendingTransition(0,0);
+                        overridePendingTransition(0, 0);
                         Toast.makeText(getApplicationContext(), "You Clicked Settings", Toast.LENGTH_LONG).show();
                         Intent intentProfiles = new Intent(getBaseContext(), SettingsActivity.class);
 //                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
                         startActivity(intentProfiles);
                         return true;
                     case R.id.home1:
+
                         return true;
-                    case R.id.getsupport:
-                        overridePendingTransition(0,0);
-                        Toast.makeText(getApplicationContext(), "You Clicked Get Support", Toast.LENGTH_LONG).show();
-                        Intent intentRegister = new Intent(getBaseContext(), GetSupport.class);
+                    case R.id.call:
+                        overridePendingTransition(0, 0);
+                        Toast.makeText(getApplicationContext(), "You Clicked Emergency Call", Toast.LENGTH_LONG).show();
+                        Intent intentEmergencyCall = new Intent(getBaseContext(), EmergencyCall.class);
 //                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-                        startActivity(intentRegister);
+                        startActivity(intentEmergencyCall);
                         return true;
-                    case R.id.findmysmartcane:
-                        // startActivity(new Intent(getApplicationContext(),ShowRoutes.class));
-                        overridePendingTransition(0,0);
-                        Toast.makeText(getApplicationContext(), "You Clicked Find My SmartCane", Toast.LENGTH_LONG).show();
-
-                        // bleController.writeBLEData(bleController.otherInstructionsChar, common.OTHER_CMD_IDENTIFY_SMARTCANE);
-                        return true;
-
-                    case R.id.emergencysettings:
-
-                        overridePendingTransition(0,0);
-                        Toast.makeText(getApplicationContext(), "You Clicked Emergency Settings", Toast.LENGTH_LONG).show();
-                        Intent intentEmergency = new Intent(getBaseContext(), EmergencyMainActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-                        startActivity(intentEmergency);
-                        return true;
-
                 }
                 return false;
             }
@@ -175,10 +294,11 @@ public class MainActivity1 extends AppCompatActivity {
 
 
     }
+
     private void showStartDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Essential Information!")
-                .setMessage("In order to use Emergency features,Please select contacts you want to connect to,during any sort of Emergency through Emergency Settings.")
+                .setMessage("In order to use Emergency features,Please select contacts you want to connect to, during any sort of Emergency through Emergency Settings.")
                 .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -196,61 +316,188 @@ public class MainActivity1 extends AppCompatActivity {
         SharedPreferences.Editor editor = prefs.edit();
         editor.putBoolean("firstStart", false);
         editor.apply();
+
     }
+
+    void updateNotifyTexts() {
+
+
+        batteryTextView.setText(String.valueOf(common.batterylevel));
+
+    }
+    // @Override
+
+
+    public void updateNotifyTexts1() {
+
+        magicTextView.setText(String.valueOf(common.magicbtn));
+        if (common.magicbtn == 0) {
+        }
+
+        if (common.magicbtn == 1) {
+
+            Toast.makeText(getApplicationContext(), "Your Device is connected to the App!", Toast.LENGTH_SHORT).show();
+
+
+        }
+
+
+        if (common.magicbtn == 2) {
+            Toast.makeText(getApplicationContext(), " Where Am I?", Toast.LENGTH_SHORT).show();
+           Intent intentLocation = new Intent(getBaseContext(), Location.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+            startActivity(intentLocation);
+
+
+
+           /* Intent intent = new Intent(this, MyLocationService.class);
+            startService(intent);*/
+
+        }
+
+
+
+
+        if (common.magicbtn == 3){
+            Log.d("initButtons", "onClick: Disconnecting...");
+            Toast.makeText(getApplicationContext(), "Your Device is Disconnected", Toast.LENGTH_SHORT).show();
+            bleController.disconnect();
+        }if (common.magicbtn == 10){
+            Toast.makeText(getApplicationContext(), "You Clicked Emergency Call", Toast.LENGTH_SHORT).show();
+            Intent intentEmergencyCall = new Intent(getBaseContext(), EmergencyCall.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+            startActivity(intentEmergencyCall);
+         /*  DbHelper db = new DbHelper(this);
+            List<ContactModel> list = db.getAllContacts();
+            for (ContactModel c : list) {
+                ContactModel c0 = list.get(0);
+                //  i = (int) listItems.get(i);
+                //  final ContactModel c = c0;
+                String phone_number0 = c0.getPhoneNo();
+
+                String Name0 = c0.getName();
+                Intent phone_intent = new Intent(Intent.ACTION_CALL);
+
+                // Set data of Intent through Uri by parsing phone number
+                phone_intent.setData(Uri.parse("tel:" + phone_number0));
+                //  Called.setText(Name0 + "\n" + phone_number0);
+                // start Intent
+                startActivity(phone_intent);
+
+
+            }*/
+          /*  Intent intent = new Intent(this, MyService.class);
+            startService(intent);*/
+
+        }if (common.magicbtn == 11) {
+            Toast.makeText(getApplicationContext(), "You Clicked NearBy", Toast.LENGTH_SHORT).show();
+           // Nearby mActivity = new Nearby();
+
+
+
+            Intent intentNearby = new Intent(getBaseContext(), Nearby.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+            startActivity(intentNearby);
+
+
+        }if (common.magicbtn == 12){
+            Toast.makeText(getApplicationContext(), "You Clicked Emergency SMS", Toast.LENGTH_SHORT).show();
+            Intent intentEmergencySms = new Intent(getBaseContext(), EmergencySms.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+            startActivity(intentEmergencySms);}
+        stop();
+
+
+
+
+
+
+    }
+
+    private void stop() {
+        common.magicbtn = 0;
+
+    }
+
+
+  /*  public void nearbyPOI(View view) {
+        //promptSpeechInput();          Uncomment if inputting POIs by voice command
+        searchPOIfromName("name");
+    }
+
+    public void searchPOIfromName(String POI_type) {
+        double lat_float = current_lat;
+        double long_float = current_long;
+        float[] results = new float[3];
+        BoundingBox bb = new BoundingBox(lat_float + 0.0003, long_float + 0.0003, lat_float - 0.0003, long_float - 0.0003);
+        System.out.println("Starting to find the POI : " + POI_type);
+        overpassProvider = new OverpassAPIProvider2();
+        String urlforpoirequest = overpassProvider.urlForPOISearch("\"" + POI_type + "\"", bb, 20, 50);
+        ArrayList<POI> namePOI = overpassProvider.getPOIsFromUrl(urlforpoirequest);
+        if (namePOI.size() == 0) {
+            tts.speak("No " + POI_type + " nearby", TextToSpeech.QUEUE_ADD, null);
+            Toast.makeText(getApplicationContext(), "No " + POI_type + " nearby", Toast.LENGTH_LONG).show();
+            System.out.println("overpass returning nothing");
+        }
+        if (namePOI != null) {
+            System.out.println("Size is: " + namePOI.size());
+            int ptr = 0;
+            while (namePOI != null && ptr < namePOI.size()){
+                Log.i("name", "name is : " + namePOI.get(ptr).mType);
+                String name = namePOI.get(ptr).mType;
+                if ((name != null) && (name.length() > 3)) {
+                    poi_tags.add(namePOI.get(ptr).mLocation);
+                    System.out.println("For POI Added: " + namePOI.get(ptr).mLocation + " " + name + " " + namePOI.get(ptr).mType);
+                    name = name.replaceAll("_", " ");
+//                    name = name.replaceAll("residential", "residential area");
+//                    name = name.replaceAll("commercial", "commercial area");
+//                    name = name.replaceAll("yes", " ");
+                    String temp = " " + name + " nearby";
+                    poi_tagInstructions.add(temp);
+                }
+                ptr++;
+            }
+            for (int i = 0; i < poi_tags.size(); i++) {
+                if(i<3){
+                    android.location.Location.distanceBetween(lat_float, long_float, poi_tags.get(i).getLatitude(), poi_tags.get(i).getLongitude(), results);
+                   tts.speak(poi_tagInstructions.get(i) + " at a distance of " + ((int) results[0]) + " metres.", TextToSpeech.QUEUE_ADD, null);
+                    Toast.makeText(getApplicationContext(), poi_tagInstructions.get(i) + " at a distance of " + ((int) results[0]) + " metres.", Toast.LENGTH_LONG).show();
+                }
+
+            }
+        }
+        namePOI.clear();
+        poi_tags.clear();
+        poi_tagInstructions.clear();
+    }*/
+
 
     public void onClick1(View view) {
 
-        if (toggleButton.isChecked()) {
-            // textview1.setText("CONNECT");
-            Log.d("initButtons", "onClick: Connecting...");
-            Toast.makeText(getApplicationContext(), "You Clicked Connect", Toast.LENGTH_LONG).show();
-            // bleController.connectToDevice(common.deviceAddress);
-        } else {
+        // if (toggleButton.isChecked()) {
+        // textview1.setText("CONNECT");
+        Log.d("initButtons", "onClick: Connecting...");
+        Toast.makeText(getApplicationContext(), "You Clicked Connect", Toast.LENGTH_LONG).show();
+        bleController.connectToDevice(common.deviceAddress);
+
+
+      /*  } else {
             // textview1.setText("DISCONNECT");
             Log.d("initButtons", "onClick: Disconnecting...");
             Toast.makeText(getApplicationContext(), "You Clicked Disconnect", Toast.LENGTH_LONG).show();
             //bleController.disconnect();
             ;
-        }
+        }*/
     }
 
     public void onClick2(View view) {
         Toast.makeText(getApplicationContext(), "You Clicked Find My SmartCane", Toast.LENGTH_LONG).show();
-
-        // bleController.writeBLEData(bleController.otherInstructionsChar, common.OTHER_CMD_IDENTIFY_SMARTCANE);
+        // bleController.readBatteryLevel();
+        bleController.writeBLEData(bleController.misc, common.OTHER_CMD_IDENTIFY_SMARTCANE);
 
     }
 
-    public void onClick3(View view) {
-        Toast.makeText(getApplicationContext(), "You Clicked Emergency Settings", Toast.LENGTH_LONG).show();
-        Intent intentEmergency = new Intent(getBaseContext(), EmergencyMainActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-        startActivity(intentEmergency);
-    }
 
-    public void onClick7(View view) {
-        Toast.makeText(getApplicationContext(), "You Clicked Debug", Toast.LENGTH_LONG).show();
-        Intent intentDebug = new Intent(getBaseContext(), DebugActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-        startActivity(intentDebug);
-    }
-
-
-    public void onClick5(View view) {
-
-        Toast.makeText(getApplicationContext(), "You Clicked Emergency Call", Toast.LENGTH_LONG).show();
-        Intent intentEmergencyCall = new Intent(getBaseContext(), EmergencyCall.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-        startActivity(intentEmergencyCall);
-    }
-
-
-    public void onClick6(View view) {
-        Toast.makeText(getApplicationContext(), "You Clicked Settings", Toast.LENGTH_LONG).show();
-        Intent intentProfiles = new Intent(getBaseContext(), SettingsActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-        startActivity(intentProfiles);
-    }
 
     public void onClick4(View view) {
 
@@ -258,22 +505,19 @@ public class MainActivity1 extends AppCompatActivity {
         Intent intentEmergencySms = new Intent(getBaseContext(), EmergencySms.class);
 //                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
         startActivity(intentEmergencySms);
+        // bleController.readBLEData(bleController.batteryLevelChar);
+        // mDataField.setText(common.batterylevel);
     }
 
     public void onClick8(View view) {
 
-        Toast.makeText(getApplicationContext(), "You Clicked Location", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "You Clicked Where Am I?", Toast.LENGTH_LONG).show();
         Intent intentLocation = new Intent(getBaseContext(), Location.class);
 //                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
         startActivity(intentLocation);
     }
 
-    public void onClick9(View view) {
-        Toast.makeText(getApplicationContext(), "You Clicked Battery Status", Toast.LENGTH_LONG).show();
-        Intent intentBattery = new Intent(getBaseContext(), BatteryActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-        startActivity(intentBattery);
-    }
+
 
     public void onClick10(View view) {
 
@@ -283,6 +527,7 @@ public class MainActivity1 extends AppCompatActivity {
 //                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
         startActivity(intentRegister);
     }
+
     public void onClick15(View view) {
 
         // call Login Activity
@@ -295,38 +540,19 @@ public class MainActivity1 extends AppCompatActivity {
 
         // call Login Activity
         Toast.makeText(getApplicationContext(), "You Clicked Navigation", Toast.LENGTH_LONG).show();
-        Intent intentNavi = new Intent(getBaseContext(),MainActivity.class);
+        Intent intentNavigation = new Intent(getBaseContext(), MainActivity.class);
 //                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-        startActivity(intentNavi);
+        startActivity(intentNavigation);
     }
 
 
 
-  /*  public void onClick11(View view) {
-
-        // Stay at the current activity.
-        Toast.makeText(getApplicationContext(), "You Clicked CardARTI8", Toast.LENGTH_LONG).show();
-        Intent intentReport = new Intent(getBaseContext(), ReportIssue.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-        startActivity(intentReport);
-    }*/
 
 
 
 
 
-
-
-
-//    @Override
-//    public void onBackPressed() {
-//        Log.i("back", "onBackPressed:___________________________________ back");
-////        MainActivity.this.finish();
-//        System.exit(0);
-////        finish();
-//    }
-
-   final String[] PERMISSIONS = new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE};
+  /*  final String[] PERMISSIONS = new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE};
 
     public void getPermissionFromUser() {
         if (BA == null) {
@@ -341,12 +567,12 @@ public class MainActivity1 extends AppCompatActivity {
             if (i == 1) {
                 msg = " Please give the App permission to use Bluetooth";
             }
-            if (ActivityCompat.checkSelfPermission(MainActivity1.this, PERMISSIONS[i]) == PackageManager.PERMISSION_DENIED) {
+            if (ActivityCompat.checkSelfPermission(MainActivity.this, PERMISSIONS[i]) == PackageManager.PERMISSION_DENIED) {
                 int finalI = i;
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity1.this);
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle(title);
                 builder.setMessage(msg);
-               // builder.setNegativeButton("DENY", null);
+                // builder.setNegativeButton("DENY", null);
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @SuppressLint("MissingPermission")
                     @Override
@@ -363,7 +589,8 @@ public class MainActivity1 extends AppCompatActivity {
                             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
                         }
-                } });
+                    }
+                });
 
              /*   builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
@@ -371,106 +598,15 @@ public class MainActivity1 extends AppCompatActivity {
                         requestPermissions(new String[]{PERMISSIONS[finalI]}, 3);
                     }
                 });*/
-                              builder.show();
-                            }
-
-                            i++;
-                        }}
-
-
-
-
-  /*  public void onToggleClick(View view)
-    {
-        if(togglebutton.isChecked()) {
-            textview1.setText("CONNECT");
-               // Log.d("initButtons", "onClick: Connecting...");
-                //bleController.connectToDevice(common.deviceAddress);
+             /*   builder.show();
             }
 
-        else {
-            textview1.setText("DISCONNECT");
-       // Log.d("initButtons", "onClick: Disconnecting...");
-       // bleController.disconnect();;
+            i++;
         }
     }*/
 
-  /*  private void initButtons() {
-        this.connectButton = findViewById(R.id.btnConnect);
-        this.connectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d("initButtons", "onClick: Connecting...");
-                bleController.connectToDevice(common.deviceAddress);
-            }
-        });
 
-        this.disconnectButton = findViewById(R.id.btnDisconnect);
-        this.disconnectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d("initButtons", "onClick: Disconnecting...");
-                bleController.disconnect();
-            }
-        });
 
-        //this.locateButton = findViewById(R.id.btnLocate);
-       // this.locateButton.setOnClickListener(new View.OnClickListener() {
-          //  @Override
-          //  public void onClick(View v) {
-                bleController.writeBLEData(bleController.otherInstructionsChar, common.OTHER_CMD_IDENTIFY_SMARTCANE);
-            }
-        });
-
-        this.trainingButton = findViewById(R.id.btnTraining);
-        this.trainingButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intentNavigation = new Intent(getBaseContext(), NavigationActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-                startActivity(intentNavigation);
-            }
-        });
-
-        this.navigationButton = findViewById(R.id.btnNavi);
-        this.navigationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intentTraining = new Intent(getBaseContext(), TrainingActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-                startActivity(intentTraining);
-            }
-        });
-
-        this.profilesButton = findViewById(R.id.btnProfiles);
-        this.profilesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intentProfiles = new Intent(getBaseContext(), ProfilesActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-                startActivity(intentProfiles);
-            }
-        });
-
-        this.debugButton = findViewById(R.id.btnDebug);
-        this.debugButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intentDebug = new Intent(getBaseContext(), DebugActivity.class);
-//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
-                startActivity(intentDebug);
-            }
-        });
-
-//        connectButton.setEnabled(true);
-//        disconnectButton.setEnabled(false);
-//        locateButton.setEnabled(false);
-//        trainingButton.setEnabled(true);
-//        navigationButton.setEnabled(true);
-//        profilesButton.setEnabled(true);
-//        debugButton.setEnabled(false);
-    }
-*/
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.d("BLE", "checkPermissions: \"Access Fine Location\" permission not granted yet!");
@@ -502,6 +638,8 @@ public class MainActivity1 extends AppCompatActivity {
                 return;
             }
             startActivityForResult(enableBTIntent, 1);
+
+
         }
     }
 
@@ -513,11 +651,93 @@ public class MainActivity1 extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Log.d("BLE", "onResume: Searching for SmartCane...");
             this.bleController.init();
+            //  registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+
         }
     }
+
 
     @Override
     protected void onPause() {
         super.onPause();
     }
+    public void onStartServiceClick(View v) {
+        startService();
+    }
+
+    public void onStopServiceClick(View v) {
+        stopService();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "onDestroy called");
+        stopService();
+        super.onDestroy();
+    }
+
+    public void startService() {
+        Log.d(TAG, "startService called");
+        if (!MyService.isServiceRunning) {
+            Intent serviceIntent = new Intent(this, MyService.class);
+            ContextCompat.startForegroundService(this, serviceIntent);
+        }
+    }
+
+    public void stopService() {
+        Log.d(TAG, "stopService called");
+        if (MyService.isServiceRunning) {
+            Intent serviceIntent = new Intent(this, MyService.class);
+            stopService(serviceIntent);
+        }
+    }
+
+    public void startServiceViaWorker() {
+        Log.d(TAG, "startServiceViaWorker called");
+        String UNIQUE_WORK_NAME = "StartMyServiceViaWorker";
+        WorkManager workManager = WorkManager.getInstance(this);
+
+        // As per Documentation: The minimum repeat interval that can be defined is 15 minutes
+        // (same as the JobScheduler API), but in practice 15 doesn't work. Using 16 here
+        PeriodicWorkRequest request =
+                new PeriodicWorkRequest.Builder(
+                        MyWorker.class,
+                        16,
+                        TimeUnit.MINUTES)
+                        .build();
+
+        // to schedule a unique work, no matter how many times app is opened i.e. startServiceViaWorker gets called
+        // do check for AutoStart permission
+        workManager.enqueueUniquePeriodicWork(UNIQUE_WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, request);
+
+    }
+    @TargetApi(Build.VERSION_CODES.M)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE) {
+            if (!Settings.canDrawOverlays(this)) {
+                // You don't have permission
+                checkPermission();
+            } else {
+                // Do as per your logic
+            }
+
+        }
+
+    }
+
+    public void checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
 }
+
+
+

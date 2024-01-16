@@ -142,7 +142,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
         setContentView(R.layout.activity_main);
         startButton = (Button) findViewById(R.id.button8);
-        saveButton = (Button) findViewById(R.id.button_save);
+       // saveButton = (Button) findViewById(R.id.button_save);
 
         tts = new TextToSpeech(MainActivity.this, new TextToSpeech.OnInitListener() {
             @Override

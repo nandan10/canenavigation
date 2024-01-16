@@ -1,10 +1,12 @@
 package com.navigation.smartcane;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -13,6 +15,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
 
 public class GPSTracker extends Service implements LocationListener {
 
@@ -51,7 +55,6 @@ public class GPSTracker extends Service implements LocationListener {
                     .getSystemService(LOCATION_SERVICE);
 
 
-
             // getting GPS status
             isGPSEnabled = locationManager
                     .isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -69,6 +72,16 @@ public class GPSTracker extends Service implements LocationListener {
                     Criteria criteria = new Criteria();
                     criteria.setAccuracy(Criteria.ACCURACY_HIGH);
                     String provider = locationManager.getBestProvider(criteria, true);
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                       // return TODO;
+                    }
                     locationManager.requestLocationUpdates(
                             provider,
                             MIN_TIME_BW_UPDATES,

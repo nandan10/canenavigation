@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,6 +28,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,9 +39,7 @@ import khushboo.rohit.osmnavi.R;
 public class Location<MyApp> extends AppCompatActivity {
 
     private static Context context;
-    // initializing
-    // FusedLocationProviderClient
-    // object
+
     FusedLocationProviderClient mFusedLocationClient;
     MyApp app;
     double currentLat, currentLong;
@@ -57,30 +57,50 @@ public class Location<MyApp> extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.location_activity);
 
-        latitudeTextView = findViewById(R.id.latTextView);
-        longitTextView = findViewById(R.id.lonTextView);
+        // latitudeTextView = findViewById(R.id.latTextView);
+        // longitTextView = findViewById(R.id.lonTextView);
         Location = findViewById(R.id.TextLocation);
         app = (MyApp) this.getApplicationContext();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-      /*  tts = new TextToSpeech(NavigationActivity1.this, new TextToSpeech.OnInitListener() {
+
+
+        BottomNavigationView bottomNavigationView=findViewById(R.id.bottom_navigation3);
+
+        // Set Home selected
+        // bottomNavigationView.setSelectedItemId(R.id.home1);
+
+        // Perform item selected listener
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
-            public void onInit(int status) {
-                // TODO Auto-generated method stub
-                if (status == TextToSpeech.SUCCESS) {
-//                    int result=tts.setLanguage(Locale.US);
-//                    if(result==TextToSpeech.LANG_MISSING_DATA ||
-//                            result==TextToSpeech.LANG_NOT_SUPPORTED){
-//                        Log.e("error", "This Language is not supported");
-//                    }
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
-                        tts.speak("Your Location", TextToSpeech.QUEUE_ADD, null);
-
-
-            }}
-        });*/
-
-
-        // method to get the location
+                switch(item.getItemId()) {
+                    case R.id.settings3:
+                        // startActivity(new Intent(getApplicationContext(),SearchPOI.class));
+                        overridePendingTransition(0, 0);
+                        Toast.makeText(getApplicationContext(), "You Clicked Settings", Toast.LENGTH_LONG).show();
+                        Intent intentProfiles = new Intent(getBaseContext(), SettingsActivity.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+                        startActivity(intentProfiles);
+                        return true;
+                    case R.id.home1:
+                        overridePendingTransition(0, 0);
+                        Toast.makeText(getApplicationContext(), "You Clicked Home", Toast.LENGTH_LONG).show();
+                        Intent intentMainActivity = new Intent(getBaseContext(), MainActivity.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+                        startActivity(intentMainActivity);
+                        return true;
+                    case R.id.call:
+                        overridePendingTransition(0, 0);
+                        Toast.makeText(getApplicationContext(), "You Clicked Emergency Call", Toast.LENGTH_LONG).show();
+                        Intent intentEmergencyCall = new Intent(getBaseContext(), EmergencyCall.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+                        startActivity(intentEmergencyCall);
+                        return true;
+                }
+                return false;
+            }
+        });
         getLastLocation();
     }
 
@@ -93,10 +113,6 @@ public class Location<MyApp> extends AppCompatActivity {
             // check if location is enabled
             if (isLocationEnabled()) {
 
-                // getting last
-                // location from
-                // FusedLocationClient
-                // object
 
                 mFusedLocationClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<android.location.Location>() {
 
@@ -114,60 +130,21 @@ public class Location<MyApp> extends AppCompatActivity {
                             if (addresses.size() > 0)
                                 System.out.println(addresses.get(0).getAddressLine(0) + addresses.get(0).getLocality() + addresses.get(0).getAdminArea());
                             cityName = addresses.get(0).getAddressLine(0);
-                            // latitudeTextView.setText(location.getLatitude() + "");
-                            // longitTextView.setText(location.getLongitude() + "");
-                            // Location.setText(cityName);
+
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
 
-                        //    String s =location.getLongitude()+location.getLatitude() +
-                        //        "My Currrent City is: "+ cityName;
+
                         if (location == null) {
                             requestNewLocationData();
                         } else {
 
-                            latitudeTextView.setText(location.getLatitude() + "");
-                            longitTextView.setText(location.getLongitude() + "");
+                            // latitudeTextView.setText(location.getLatitude() + "");
+                            //longitTextView.setText(location.getLongitude() + "");
                             Location.setText(cityName);
                             String finalCityName = cityName;
-                        /*    tts = new TextToSpeech(Location.this, new TextToSpeech.OnInitListener() {
-                                @Override
-                                public void onInit(int status) {
-                                    // TODO Auto-generated method stub
-                                    if (status == TextToSpeech.SUCCESS) {
-//                    int result=tts.setLanguage(Locale.US);
-//                    if(result==TextToSpeech.LANG_MISSING_DATA ||
-//                            result==TextToSpeech.LANG_NOT_SUPPORTED){
-//                        Log.e("error", "This Language is not supported");
-//                    }
-                                        if (finalCityName == null) {
-                                            tts.speak("Could Not find location info", TextToSpeech.QUEUE_ADD, null);
-                                        } else {
 
-                                            // latitudeTextView.setText(location.getLatitude() + "");
-                                            //  longitTextView.setText(location.getLongitude() + "");
-                                            // Location.setText(cityName);
-                                            tts.speak("You are at " + finalCityName, TextToSpeech.QUEUE_ADD, null);
-
-                                        }
-                                        // tts.speak("Your Location", TextToSpeech.QUEUE_ADD, null);
-
-
-                                    }
-                                }
-                            });*/
-
-                        /*    if (cityName == null){
-                                tts.speak("Could Not find location info", TextToSpeech.QUEUE_ADD, null);}
-                            else {
-
-                               // latitudeTextView.setText(location.getLatitude() + "");
-                               //  longitTextView.setText(location.getLongitude() + "");
-                                // Location.setText(cityName);
-                                tts.speak("You are at " + cityName, TextToSpeech.QUEUE_ADD, null);
-
-                            }*/
                         }
                     }
 
@@ -207,9 +184,7 @@ public class Location<MyApp> extends AppCompatActivity {
         @Override
         public void onLocationResult(LocationResult locationResult) {
             android.location.Location mLastLocation = locationResult.getLastLocation();
-            //  latitudeTextView.setText("Latitude: " + mLastLocation.getLatitude() + "");
-            //longitTextView.setText("Longitude: " + mLastLocation.getLongitude() + "");
-            //  private EditText editLocation = null;
+
             String cityName = null;
             Geocoder gcd = new Geocoder(getBaseContext(),
                     Locale.getDefault());
@@ -228,50 +203,7 @@ public class Location<MyApp> extends AppCompatActivity {
 
             String s = mLastLocation.getLongitude() + mLastLocation.getLatitude() +
                     "My Currrent City is: " + cityName;
-            // Location.setText(s);
-            // longitTextView.setText("Address: " + cityName + "");
 
-              /*  Address obj = getAddress(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                String fin_add = getNameFromAddress(obj, 4);
-           // TextToSpeech tts = null;
-            if (fin_add == null)
-                    tts.speak("Could Not find location info", TextToSpeech.QUEUE_ADD, null);
-                else
-                    tts.speak("You are at " + fin_add, TextToSpeech.QUEUE_ADD, null);
-
-                System.out.println(fin_add);
-            }};
-            public String getNameFromAddress (Address obj,int ex){
-                String add = "";
-                String fin_add = "";
-                for (int i = 0; i <= obj.getMaxAddressLineIndex(); i++) {
-                    add = add + obj.getAddressLine(i);
-                    add = add + ", ";
-                }
-                int delimitCnt = 0;
-                for (int j = 0; j < add.length(); j++) {
-                    if (add.charAt(j) == ',')
-                        delimitCnt++;
-                    if (delimitCnt == ex)
-                        break;
-                    fin_add = fin_add + add.charAt(j);
-                }
-                return fin_add;
-            }
-
-            public Address getAddress ( double lat, double lng){
-                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-                Address obj = null;
-                try {
-                    List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
-                    obj = addresses.get(1);
-
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-                return obj;*/
         }
     };
 
@@ -365,53 +297,21 @@ public class Location<MyApp> extends AppCompatActivity {
                             e.printStackTrace();
                         }
 
-                        //    String s =location.getLongitude()+location.getLatitude() +
+
+                        String shareBodyText;
+
+                        shareBodyText = "Hi! I am " + " in " + cityName.toUpperCase();
+
+                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                        shareIntent.setType("text/plain");
+                        String shareSubText = "share your location";
+                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubText);
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, shareBodyText);
+
+                        startActivity(Intent.createChooser(shareIntent, "Share With"));
 
 
-
-                        /*    if (cityName == null){
-                                tts.speak("Could Not find location info", TextToSpeech.QUEUE_ADD, null);}
-                            else {
-
-                               // latitudeTextView.setText(location.getLatitude() + "");
-                               //  longitTextView.setText(location.getLongitude() + "");
-                                // Location.setText(cityName);
-                                tts.speak("You are at " + cityName, TextToSpeech.QUEUE_ADD, null);
-
-                            }*/
-
-
-                            // vibe.vibrate(200);
-    /*   Location mLastLocation = locationResult.getLastLocation();
-       //  latitudeTextView.setText("Latitude: " + mLastLocation.getLatitude() + "");
-       //longitTextView.setText("Longitude: " + mLastLocation.getLongitude() + "");
-       //  private EditText editLocation = null;
-       String cityName;
-       Geocoder gcd = new Geocoder(getBaseContext(),
-               Locale.getDefault());
-       List<Address>  addresses;
-       try {
-           addresses = gcd.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()
-                   , 6);
-           if (addresses.size() > 0)
-               System.out.println(addresses.get(0).getAddressLine(0)+addresses.get(0).getLocality()+addresses.get(0).getAdminArea());
-
-
-           cityName=addresses.get(0).getAddressLine(0);*/
-                            String shareBodyText;
-
-                            shareBodyText = "Hi! I am " + " in " + cityName.toUpperCase();
-
-                            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                            shareIntent.setType("text/plain");
-                            String shareSubText = "share your location";
-                            shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubText);
-                            shareIntent.putExtra(Intent.EXTRA_TEXT, shareBodyText);
-
-                            startActivity(Intent.createChooser(shareIntent, "Share With"));
-
-
-                        }
+                    }
 
                 });
             }

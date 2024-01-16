@@ -2,6 +2,7 @@ package com.navigation.smartcane;
 
 import android.Manifest;
 import android.app.Activity;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -66,6 +67,7 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
     Compass compass;
     SQLiteDatabase db;
     MyApp app;
+    private BLEController bleController;
     Handler h = new Handler();
     Handler appHandler = new Handler();
     int delay = 100, delayCheck = 100 ; //milliseconds
@@ -106,6 +108,7 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
     int instid=0;
     int navType, selectedRoute;
     String destinationAddress;
+   // BluetoothGattCharacteristic Navi = null;
     double final_lat = 0;
     double final_long = 0;
     double init_lat = 0;
@@ -118,6 +121,8 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
     GeoPoint previous_landmark;
     Road road;
 
+    //private BLEController bleController;
+    private Common common;
 
 
     OverpassAPIProvider2 overpassProvider;
@@ -145,7 +150,8 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-
+        this.bleController = BLEController.getInstance(this);
+        this.common = Common.getInstance();
         setContentView(R.layout.loading);
 
         landmarks = new ArrayList<GeoPoint>();
@@ -469,24 +475,29 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
 
         changeNavigationLayout();
         navigatingDistance = distanceToStr(road.mLength);
+
         if(!isPreplanning) {
             tts.speak("Starting Navigation. Your location is " + navigatingDistance + " away.", TextToSpeech.QUEUE_ADD, null);
             Toast.makeText(getApplicationContext(),"Starting Navigation. Your location is " + navigatingDistance + " away.", Toast.LENGTH_LONG).show();
-        }
+
+
+            }
         else {
             tts.speak("Starting Route Preview. Your location is " + navigatingDistance + " away.", TextToSpeech.QUEUE_ADD, null);
             Toast.makeText(getApplicationContext(),"Starting Route Preview. Your location is " + navigatingDistance + " away.", Toast.LENGTH_LONG).show();
         }
         headingDirection = getBearingNext();
         System.out.println("Heading Direction" + headingDirection);
-        if (headingDirection < 180 && headingDirection > 10){
+
+        if (headingDirection < 180 && headingDirection > 10) {
             tts.speak("Turn " + (int) headingDirection + " degree towards right.", TextToSpeech.QUEUE_ADD, null);
-            Toast.makeText(getApplicationContext(),"Turn " + (int) headingDirection + " degree towards right.", Toast.LENGTH_LONG).show();
-        }
-        else if (headingDirection >= 180 && headingDirection < 350){
+           Toast.makeText(getApplicationContext(), "Turn " + (int) headingDirection + " degree towards right.", Toast.LENGTH_LONG).show();
+            bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 4});
+        } else if (headingDirection >= 180 && headingDirection < 350){
             tts.speak("Turn " + (int) (360 - headingDirection) + " degrees towards left.", TextToSpeech.QUEUE_ADD, null);
             Toast.makeText(getApplicationContext(),"Turn " + (int) (360 - headingDirection) + " degrees towards left.", Toast.LENGTH_LONG).show();
-        }
+            bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 3});
+            }
 
         turn_timestamp = System.currentTimeMillis();
         tst.set(0, turn_timestamp);
@@ -570,11 +581,13 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
             if ((int) turn < 10 || (int) turn > 350) {
                 tts.speak("You are now facing the correct direction. Proceed straight.", TextToSpeech.QUEUE_ADD, null);
                 Toast.makeText(getApplicationContext(),"You are now facing the correct direction. Proceed straight.", Toast.LENGTH_LONG).show();
+                bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 1});
                 faceHeadDirection = true;
                 getTagAtLocation();
                 dir_timestamp = System.currentTimeMillis();
                 turn_timestamp = System.currentTimeMillis();
                 setParts();
+              //  bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 4});
             }
         }
         else if (osmNextInstruction < landmarks.size()) {
@@ -591,8 +604,10 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
                 if (((int) turn < 10 || (int) turn > 350)){
                     tts.speak("You are now facing the correct direction. ", TextToSpeech.QUEUE_ADD, null);
                     Toast.makeText(getApplicationContext(),"You are now facing the correct direction. ", Toast.LENGTH_LONG).show();
+                    bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 1});
                     orientationCheck = true;
                     dir_timestamp = System.currentTimeMillis();
+                   // bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 0});
                 }
             }
             if (abs(dir_timestamp - System.currentTimeMillis()) > 20000) {
@@ -602,6 +617,7 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
                             if (turn < 180) {
                                 tts.speak("You are deviating from the correct direction. Turn " + (int) turn + " degree towards right.", TextToSpeech.QUEUE_ADD, null);
                                 Toast.makeText(getApplicationContext(),"You are deviating from the correct direction. Turn " + (int) turn + " degree towards right.", Toast.LENGTH_LONG).show();
+                                bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 2});
                             }
                             dir_timestamp = System.currentTimeMillis();
                             orientationCheck = false;
@@ -619,10 +635,11 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
                     if (x < y/2) {
                         tts.speak("In " + x + " meters " + instructions.get(i), TextToSpeech.QUEUE_ADD, null);
                         Toast.makeText(getApplicationContext(), "In " + x + " meters " + instructions.get(i), Toast.LENGTH_LONG).show();
+                       // bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 1});
                     } else if (x >= y/2) {
                         tts.speak("Continue straight for another " + x + " meters", TextToSpeech.QUEUE_ADD, null);
                         Toast.makeText(getApplicationContext(), "Continue straight for another " + x + " meters", Toast.LENGTH_LONG).show(); }
-                }
+                    bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 1}); }
                 tst.set(i, System.currentTimeMillis());
             }
         }
@@ -930,7 +947,7 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
         if (headingDirection < 180 && headingDirection > 10) {
             tts.speak("Turn " + (int) headingDirection + " degree towards right.", TextToSpeech.QUEUE_ADD, null);
             Toast.makeText(getApplicationContext(), "Turn " + (int) headingDirection + " degree towards right.", Toast.LENGTH_LONG).show(); }
-
+       // bleController.writeBLEData(bleController.Navi, new byte[]{(byte) 4});
 
         turn_timestamp = System.currentTimeMillis();
         tst.set(0, turn_timestamp);
@@ -1285,7 +1302,7 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
                 if (turn < 180) {
                     tts.speak("Turn " + (int) turn + " degree towards right.", TextToSpeech.QUEUE_ADD, null);
                     Toast.makeText(getApplicationContext(), "Turn " + (int) turn + " degree towards right.", Toast.LENGTH_LONG).show(); }
-            }
+                }
             return;
         }
         if (osmNextInstruction < landmarks.size()) {

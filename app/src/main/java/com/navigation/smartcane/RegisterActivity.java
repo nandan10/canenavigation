@@ -5,14 +5,30 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
 import khushboo.rohit.osmnavi.R;
+
 
 public class RegisterActivity<Editor> extends AppCompatActivity {
     // creating constant keys for shared preferences.
@@ -23,8 +39,11 @@ public class RegisterActivity<Editor> extends AppCompatActivity {
     // variable for shared preferences.
     SharedPreferences sharedpreferences;
     // creating variables for our edit text and button.
-    private EditText messageEdt, messageEdt0,messageEdt1,messageEdt2;
+    private EditText messageEdt,messageEdt1,messageEdt2;
     Button submitBtn;
+    Button scanBtn;
+    TextView messageText;
+
 
     private Context ctx;
     // private Context ctx;
@@ -37,112 +56,143 @@ public class RegisterActivity<Editor> extends AppCompatActivity {
         sharedpreferences = getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE);
         // initializing our variables.
         messageEdt = findViewById(R.id.idEdtMessage);
-        messageEdt0 = findViewById(R.id.idEdtMessage0);
+
         messageEdt1 = findViewById(R.id.idEdtMessage1);
         messageEdt2 = findViewById(R.id.idEdtMessage2);
         submitBtn = findViewById(R.id.BtnSubmit);
+        scanBtn = findViewById(R.id.scanBtn);
+        messageText = findViewById(R.id.textContent);
+
+
+        // adding listener to the button
+        //  scanBtn.setOnClickListener((View.OnClickListener) this);
 
         // adding on click listener for our button.
         submitBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // inside on click we are checking if the entered data
-                // by user is empty or not.
+                                         @Override
+                                         public void onClick(View v) {
+                                             // inside on click we are checking if the entered data
+                                             // by user is empty or not.
 
-                String msg = messageEdt.getText().toString();
-                if (TextUtils.isEmpty(msg)) {
-                    // if the input is empty we are displaying a toast message.
-                    Toast.makeText(RegisterActivity.this, "Please enter your Name", Toast.LENGTH_SHORT).show();
-                }
-                String msg0 = messageEdt0.getText().toString();
-                if (TextUtils.isEmpty(msg0)) {
-                    // if the input is empty we are displaying a toast message.
-                    Toast.makeText(RegisterActivity.this, "Please enter your Serial Number", Toast.LENGTH_SHORT).show();
-                }
-                String msg1 = messageEdt1.getText().toString();
-                if (TextUtils.isEmpty(msg1)) {
-                    // if the input is empty we are displaying a toast message.
-                    Toast.makeText(RegisterActivity.this, "Please enter your Email Id", Toast.LENGTH_SHORT).show();
-                }
-                String msg2 = messageEdt2.getText().toString();
-                if (TextUtils.isEmpty(msg2)) {
-                    // if the input is empty we are displaying a toast message.
-                    Toast.makeText(RegisterActivity.this, "Please enter your Mobile Number", Toast.LENGTH_SHORT).show();}
-
-
-
-                    // String msg = "";
-
-                    Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setType("message/rfc822");
-                    //  i.setData(Uri.parse("kumari.singh@gmail.com"));
-                    i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"kumari.singh@gmail.com"});
-                    i.putExtra(Intent.EXTRA_SUBJECT, "REGISTER");
-
-                    i.putExtra(Intent.EXTRA_TEXT,"Name : "+msg+"\n"+"Serial Number : "+msg0+"\n"+"Email-Id : "+msg1+"\n"+"Mobile Number : "+msg2);
-
-                    startActivity(Intent.createChooser(i, "Choose an Email client :"));
-
-
-                }
+                                             String msg = messageEdt.getText().toString();
+                                             if (TextUtils.isEmpty(msg)) {
+                                                 // if the input is empty we are displaying a toast message.
+                                                 Toast.makeText(RegisterActivity.this, "Please enter your Name", Toast.LENGTH_SHORT).show();
+                                             }
+                                             String msg0 =  messageText.getText().toString();
+                                             if (TextUtils.isEmpty(msg0)) {
+                                                 // if the input is empty we are displaying a toast message.
+                                                 Toast.makeText(RegisterActivity.this, "Please enter your Serial Number", Toast.LENGTH_SHORT).show();
+                                             }
+                                             String msg1 = messageEdt1.getText().toString();
+                                             if (TextUtils.isEmpty(msg1)) {
+                                                 // if the input is empty we are displaying a toast message.
+                                                 Toast.makeText(RegisterActivity.this, "Please enter your Email Id", Toast.LENGTH_SHORT).show();
+                                             }
+                                             String msg2 = messageEdt2.getText().toString();
+                                             if (TextUtils.isEmpty(msg2)) {
+                                                 // if the input is empty we are displaying a toast message.
+                                                 Toast.makeText(RegisterActivity.this, "Please enter your Mobile Number", Toast.LENGTH_SHORT).show();}
 
 
 
+                                             // String msg = "";
+
+                                             Intent i = new Intent(Intent.ACTION_SEND);
+                                             i.setType("message/rfc822");
+                                             //  i.setData(Uri.parse("kumari.singh@gmail.com"));
+                                             i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"kumari.singh@gmail.com"});
+                                             i.putExtra(Intent.EXTRA_SUBJECT, "REGISTER");
+
+                                             i.putExtra(Intent.EXTRA_TEXT,"Name : "+msg+"\n"+"Mobile Number : "+msg2+"\n"+"Email-Id : "+msg1+"\n"+"Serial Number : "+msg0);
+
+                                             startActivity(Intent.createChooser(i, "Choose an Email client :"));
 
 
-             /*   else
-                    {
-                        // if the input is not empty we are calling a method to save
-                        // data to shared prefs.
-                        saveMessage(msg);
-                       // new SaveSharedPreference();
-                   // report();
-                        //SaveSharedPreference1();
+                                         }
 
 
-                }*/
-            }
+
+
+
+                                     }
         );
 
+        BottomNavigationView bottomNavigationView=findViewById(R.id.bottom_navigation3);
 
+        // Set Home selected
+        // bottomNavigationView.setSelectedItemId(R.id.home1);
+
+        // Perform item selected listener
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+                switch(item.getItemId()) {
+                    case R.id.settings3:
+                        // startActivity(new Intent(getApplicationContext(),SearchPOI.class));
+                        overridePendingTransition(0, 0);
+                        Toast.makeText(getApplicationContext(), "You Clicked Settings", Toast.LENGTH_LONG).show();
+                        Intent intentProfiles = new Intent(getBaseContext(), SettingsActivity.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+                        startActivity(intentProfiles);
+                        return true;
+                    case R.id.home1:
+                        overridePendingTransition(0, 0);
+                        Toast.makeText(getApplicationContext(), "You Clicked Home", Toast.LENGTH_LONG).show();
+                        Intent intentMainActivity = new Intent(getBaseContext(), MainActivity.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+                        startActivity(intentMainActivity);
+                        return true;
+                    case R.id.call:
+                        overridePendingTransition(0, 0);
+                        Toast.makeText(getApplicationContext(), "You Clicked Emergency Call", Toast.LENGTH_LONG).show();
+                        Intent intentEmergencyCall = new Intent(getBaseContext(), EmergencyCall.class);
+//                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
+                        startActivity(intentEmergencyCall);
+                        return true;
+                }
+                return false;
+            }
+        });
     }
 
-   /* private void saveMessage(String msg) {
-        SharedPreferences.Editor editor = sharedpreferences.edit();
-        // below lines will put values for
-        // message in shared preferences.
-        editor.putString(MESSAGE_KEY, msg);
-        // to save our data with key and value.
-        editor.apply();
-        // on below line we are displaying a toast message after adding data to shared prefs.
-        Toast.makeText(this, "Message saved to Shared Preferences", Toast.LENGTH_SHORT).show();
-        // after that we are setting our edit text to empty
-        //messageEdt0.setText("");
-        Toast.makeText(RegisterActivity.this, "User Registered successfully", Toast.LENGTH_SHORT).show();
-
-    }*/
 
 
 
-    /*public static class SaveSharedPreference<Editor> {
-        static final String PREF_USER_NAME = "name";
-        private Context ctx;
 
-        static SharedPreferences getSharedPreferences(Context ctx) {
-            return PreferenceManager.getDefaultSharedPreferences(ctx);
-        }
+    public void onClick33(View v) {
+        // we need to create the object
+        // of IntentIntegrator class
+        // which is the class of QR library
+        IntentIntegrator intentIntegrator = new IntentIntegrator(this);
+        intentIntegrator.setPrompt("Scan a barcode or QR Code");
+        intentIntegrator.setOrientationLocked(false);
+        intentIntegrator.initiateScan();
+    }
 
-        public static <Editor> void setUserName(Context ctx, String userName) {
-            Editor editor = (Editor) getSharedPreferences(ctx).edit();
-            ((SharedPreferences.Editor) editor).putString(PREF_USER_NAME, userName);
-            ((SharedPreferences.Editor) editor).commit();
-        }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        IntentResult intentResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        // if the intentResult is null then
+        // toast a message as "cancelled"
+        if (intentResult != null) {
+            if (intentResult.getContents() == null) {
+                Toast.makeText(getBaseContext(), "Cancelled", Toast.LENGTH_SHORT).show();
+            } else {
+                // if the intentResult is not null we'll set
+                // the content and format of scan message
+                messageText.setText(intentResult.getContents());
 
-        public static String getUserName(Context ctx) {
-            return getSharedPreferences(ctx).getString(PREF_USER_NAME, "");
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
-*/
+
+
+
 
     public void goBackPressed(View view) {
         onBackPressed();
