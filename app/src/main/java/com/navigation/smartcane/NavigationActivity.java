@@ -40,6 +40,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import org.osmdroid.bonuspack.location.POI;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
+import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 
@@ -168,7 +169,8 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
         poi_tagInstructions = new ArrayList<String>();
         timestamps = new ArrayList<Long>();
         tst = new ArrayList<Long>();
-        roadManager = new OSRMRoadManager(this);
+       // roadManager = new OSRMRoadManager(this);
+        roadManager = new OSRMRoadManager(this,"com.osm-navi.iit");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
             compass = new Compass(this);
         }
@@ -340,10 +342,14 @@ public class NavigationActivity extends Activity implements GoogleApiClient.Conn
         ArrayList<GeoPoint> waypoints = new ArrayList<GeoPoint>();
         waypoints.add(startPoint);
         waypoints.add(endPoint);
-        roadManager.setUserAgent("com.osm-navi.iit");
-        roadManager.setService("https://router.project-osrm.org/route/v1/driving/");
+      //  roadManager.setUserAgent("com.osm-navi.iit");
+      //  roadManager.setService("https://router.project-osrm.org/route/v1/driving/");
         //roadManager.setService("https://api.openrouteservice.org/directions?api_key=5b3ce3597851110001cf6248fb336dc5e50e4501be13e8dbf3b45ac2&coordinates=8.34234,48.23424%7C8.34423,48.26424&profile=foot-walking&preference=shortest&roundabout_exits=true&continue_straight=true&extra_info=surface%7Cwaycategory%7Cwaytype%7Csuitability&optimized=true");// roadManager.addRequestOption("alternatives=3");
-
+        RoadManager roadManager = new OSRMRoadManager(this, "com.osm-navi.iit");
+        //   roadManager.setUserAgent("com.osm-navi.iit");
+        // roadManager.setService("https://router.project-osrm.org/route/v1/driving/");
+        //roadManager.setService("https://api.openrouteservice.org/directions?api_key=5b3ce3597851110001cf6248fb336dc5e50e4501be13e8dbf3b45ac2&coordinates=8.34234,48.23424%7C8.34423,48.26424&profile=foot-walking&preference=shortest&roundabout_exits=true&continue_straight=true&extra_info=surface%7Cwaycategory%7Cwaytype%7Csuitability&optimized=true");// roadManager.addRequestOption("alternatives=3");
+        ((OSRMRoadManager) roadManager).setMean(OSRMRoadManager.MEAN_BY_FOOT);
         System.out.println("Starting point is: " + startPoint.toDoubleString());
         System.out.println("Destination Point is: " + endPoint.toDoubleString());
 

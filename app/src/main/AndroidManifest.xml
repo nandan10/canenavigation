@@ -38,6 +38,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
+    <uses-feature android:name="android.hardware.sensor.accelerometer" />
+    <uses-feature android:name="android.hardware.sensor.compass" />
+
+
+
 
     <!--This permission is necessary for devices
       with Android O and above, so that
@@ -59,7 +64,8 @@
         android:label="@string/app_name"
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:requestLegacyExternalStorage="true">
         <receiver
             android:name="com.navigation.smartcane.MyReceiver"
             android:enabled="true"
@@ -90,6 +96,8 @@
         <activity android:name="com.navigation.smartcane.SaveRoute" />
         <activity android:name="com.navigation.smartcane.ShowDb" />
         <activity android:name="com.navigation.smartcane.InputPhrase" />
+        <activity android:name="com.navigation.smartcane.CompassActivity" />
+
 
 
 

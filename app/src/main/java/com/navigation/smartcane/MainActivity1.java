@@ -532,7 +532,7 @@ public class MainActivity1 extends AppCompatActivity {
 
         // call Login Activity
         Toast.makeText(getApplicationContext(), "You Clicked Training", Toast.LENGTH_LONG).show();
-        Intent intentTraining = new Intent(getBaseContext(), Training.class);
+        Intent intentTraining = new Intent(getBaseContext(), CompassActivity.class);
 //                intentNA.putExtra("Type", NAV_TYPE_LOAD_ROUTE);
         startActivity(intentTraining);
     }
